@@ -103,7 +103,7 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>✨ AI CV Generator</h1>
+          <h1>Swarnav's ✨ AI CV Generator</h1>
           <p>Transform your resume with AI-powered optimization</p>
         </header>
 
