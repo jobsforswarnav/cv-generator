@@ -32,11 +32,9 @@ app.use(express.static(path.join(__dirname, '../../public')));
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend')));
   
-  // All other routes return the React app
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(__dirname, '../frontend/index.html'));
-    }
+  // All other GET routes (not /api) return the React app
+  app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
   });
 }
 
