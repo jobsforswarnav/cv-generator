@@ -11,9 +11,10 @@ const router = express.Router();
 
 // Configure file upload
 // This tells multer where to save uploaded files
+const uploadsDir = path.join(__dirname, '../../uploads');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Save to uploads folder
+    cb(null, uploadsDir); // Save to uploads folder
   },
   filename: (req, file, cb) => {
     // Create unique filename: timestamp-originalname.docx
@@ -91,7 +92,7 @@ router.post('/generate', upload.single('cv'), async (req: Request, res: Response
     // Step 3: Generate DOCX file
     console.log('📝 Creating DOCX file...');
     const outputFilename = `optimized-${Date.now()}.docx`;
-    const outputPath = path.join('temp', outputFilename);
+    const outputPath = path.join(__dirname, '../../temp', outputFilename);
     await docxService.generateDocx(optimizedCV, outputPath);
 
     // Step 4: Send file to user
