@@ -6,6 +6,7 @@ import { ParserService } from '../services/parser.service';
 import { AIService } from '../services/ai.service';
 import { DocxService } from '../services/docx.service';
 import { CVInput } from '../types';
+import User from '../models/User';
 
 const router = express.Router();
 
@@ -53,11 +54,19 @@ const docxService = new DocxService();
 const claudeService = new AIService(process.env.ANTHROPIC_API_KEY || '');
 const geminiService = new GeminiAIService(process.env.GEMINI_API_KEY || '');
 
+// Authentication middleware
+const isAuthenticated = (req: Request, res: Response, next: any) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: 'Not authenticated' });
+};
+
 /**
  * POST /api/cv/generate
  * Main endpoint: Upload CV and generate optimized version
  */
-router.post('/generate', upload.single('cv'), async (req: Request, res: Response) => {
+router.post('/generate', isAuthenticated, upload.single('cv'), async (req: Request, res: Response) => {
   try {
     // Check if file was uploaded
     if (!req.file) {
@@ -93,7 +102,19 @@ router.post('/generate', upload.single('cv'), async (req: Request, res: Response
       optimizedCV = await claudeService.generateOptimizedCV(parsedCV, cvInput);
     } else {
       console.log('   Using Google Gemini (Free!)');
-      optimizedCV = await geminiService.generateOptimizedCV(parsedCV, cvInput);
+      
+      // Get user's API key if they have one
+      const user = await User.findById((req.user as any)._id);
+      const apiKey = user?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+      
+      if (user?.geminiApiKey) {
+        console.log('   Using user\'s personal API key');
+      } else {
+        console.log('   Using default API key');
+      }
+      
+      const userGeminiService = new GeminiAIService(apiKey);
+      optimizedCV = await userGeminiService.generateOptimizedCV(parsedCV, cvInput);
     }
 
     // Step 3: Generate DOCX file

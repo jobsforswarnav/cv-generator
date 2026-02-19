@@ -32,7 +32,10 @@ if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 export { uploadsDir, tempDir };
 
 // Middleware
-app.use(cors()); // Allow requests from frontend
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+})); // Allow requests from frontend with credentials
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse form data
 
@@ -50,6 +53,42 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Routes
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
+import session from 'express-session';
+import passport from './config/passport';
+import mongoose from 'mongoose';
+
+// MongoDB connection
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('✅ MongoDB connected'))
+    .catch(err => {
+      console.error('❌ MongoDB connection error:', err.message);
+      console.log('⚠️  App will continue without MongoDB. User data will not persist.');
+    });
+} else {
+  console.log('⚠️  No MongoDB URI found. Running without database.');
+}
+
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'cv-generator-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use('/auth', authRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/cv', cvRoutes);
 
 // Root endpoint

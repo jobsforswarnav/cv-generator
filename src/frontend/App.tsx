@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import './App.css';
 import FileUpload from './components/FileUpload';
 import CVForm from './components/CVForm';
 import LoadingScreen from './components/LoadingScreen';
+import Login from './components/Login';
+import Settings from './components/Settings';
+import Header from './components/Header';
 
 interface FormData {
   file: File | null;
@@ -15,6 +20,7 @@ interface FormData {
 }
 
 function App() {
+  const { user, isLoading } = useAuth();
   const [step, setStep] = useState<'upload' | 'form' | 'processing'>('upload');
   const [formData, setFormData] = useState<FormData>({
     file: null,
@@ -26,6 +32,20 @@ function App() {
     aiProvider: 'gemini',
   });
   const [error, setError] = useState<string>('');
+
+  if (isLoading) {
+    return (
+      <div className="app">
+        <div className="container">
+          <LoadingScreen />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   const handleFileUpload = (file: File) => {
     setFormData({ ...formData, file });
@@ -52,8 +72,9 @@ function App() {
       apiFormData.append('aiProvider', data.aiProvider || formData.aiProvider);
 
       // Send to backend
-      const response = await fetch('/api/cv/generate', {
+      const response = await fetch('http://localhost:3001/api/cv/generate', {
         method: 'POST',
+        credentials: 'include',
         body: apiFormData,
       });
 
@@ -100,33 +121,41 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <div className="container">
-        <header className="header">
-          <h1>Swarnav's ✨ AI CV Generator</h1>
-          <p>Transform your resume with AI-powered optimization</p>
-        </header>
+    <>
+      <Header />
+      <Routes>
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/" element={
+          <div className="app">
+            <div className="container">
+              <header className="header">
+                <h1>✨ AI CV Generator</h1>
+                <p>Transform your resume with AI-powered optimization</p>
+              </header>
 
-        {error && (
-          <div className="error-banner">
-            <span>⚠️ {error}</span>
-            <button onClick={() => setError('')}>×</button>
+              {error && (
+                <div className="error-banner">
+                  <span>⚠️ {error}</span>
+                  <button onClick={() => setError('')}>×</button>
+                </div>
+              )}
+
+              {step === 'upload' && <FileUpload onFileUpload={handleFileUpload} />}
+              
+              {step === 'form' && (
+                <CVForm
+                  onSubmit={handleFormSubmit}
+                  onBack={handleBack}
+                  initialData={formData}
+                />
+              )}
+
+              {step === 'processing' && <LoadingScreen />}
+            </div>
           </div>
-        )}
-
-        {step === 'upload' && <FileUpload onFileUpload={handleFileUpload} />}
-        
-        {step === 'form' && (
-          <CVForm
-            onSubmit={handleFormSubmit}
-            onBack={handleBack}
-            initialData={formData}
-          />
-        )}
-
-        {step === 'processing' && <LoadingScreen />}
-      </div>
-    </div>
+        } />
+      </Routes>
+    </>
   );
 }
 
