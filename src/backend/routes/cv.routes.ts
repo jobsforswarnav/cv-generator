@@ -10,8 +10,15 @@ import { CVInput } from '../types';
 const router = express.Router();
 
 // Configure file upload
-// This tells multer where to save uploaded files
-const uploadsDir = path.join(__dirname, '../../uploads');
+// Use /tmp on production (Render), local paths in development
+const uploadsDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads' : path.join(__dirname, '../../uploads');
+const tempDir = process.env.NODE_ENV === 'production' ? '/tmp/temp' : path.join(__dirname, '../../temp');
+
+// Ensure directories exist
+const fsSync = require('fs');
+if (!fsSync.existsSync(uploadsDir)) fsSync.mkdirSync(uploadsDir, { recursive: true });
+if (!fsSync.existsSync(tempDir)) fsSync.mkdirSync(tempDir, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir); // Save to uploads folder
@@ -92,7 +99,7 @@ router.post('/generate', upload.single('cv'), async (req: Request, res: Response
     // Step 3: Generate DOCX file
     console.log('📝 Creating DOCX file...');
     const outputFilename = `optimized-${Date.now()}.docx`;
-    const outputPath = path.join(__dirname, '../../temp', outputFilename);
+    const outputPath = path.join(tempDir, outputFilename);
     await docxService.generateDocx(optimizedCV, outputPath);
 
     // Step 4: Send file to user

@@ -22,10 +22,14 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Ensure required directories exist
-const uploadsDir = path.join(__dirname, '../../uploads');
-const tempDir = path.join(__dirname, '../../temp');
+// Use /tmp on production (Render), local paths in development
+const uploadsDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads' : path.join(__dirname, '../../uploads');
+const tempDir = process.env.NODE_ENV === 'production' ? '/tmp/temp' : path.join(__dirname, '../../temp');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+// Export for use in routes
+export { uploadsDir, tempDir };
 
 // Middleware
 app.use(cors()); // Allow requests from frontend
