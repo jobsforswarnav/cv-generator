@@ -3,7 +3,8 @@ import './Login.css';
 
 const Login: React.FC = () => {
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3001/auth/google';
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    window.location.href = `${serverUrl}/auth/google`;
   };
 
   return (

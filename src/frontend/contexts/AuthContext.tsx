@@ -21,10 +21,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('http://localhost:3001/auth/current-user', {
+      const response = await fetch(`${serverUrl}/auth/current-user`, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -47,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:3001/auth/logout', { credentials: 'include' });
+      await fetch(`${serverUrl}/auth/logout`, { credentials: 'include' });
       setUser(null);
       window.location.href = '/';
     } catch (error) {

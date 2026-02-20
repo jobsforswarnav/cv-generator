@@ -11,6 +11,7 @@ const Settings: React.FC = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
   useEffect(() => {
     fetchSettings();
@@ -18,7 +19,7 @@ const Settings: React.FC = () => {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/user/settings', {
+      const response = await fetch(`${serverUrl}/api/user/settings`, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -37,7 +38,7 @@ const Settings: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/user/settings/api-key', {
+      const response = await fetch(`${serverUrl}/api/user/settings/api-key`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

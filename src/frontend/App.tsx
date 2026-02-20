@@ -32,6 +32,7 @@ function App() {
     aiProvider: 'gemini',
   });
   const [error, setError] = useState<string>('');
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
   if (isLoading) {
     return (
@@ -72,7 +73,7 @@ function App() {
       apiFormData.append('aiProvider', data.aiProvider || formData.aiProvider);
 
       // Send to backend
-      const response = await fetch('http://localhost:3001/api/cv/generate', {
+      const response = await fetch(`${serverUrl}/api/cv/generate`, {
         method: 'POST',
         credentials: 'include',
         body: apiFormData,
